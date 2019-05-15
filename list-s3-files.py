@@ -48,7 +48,7 @@ def main():
     else:
         files = bucket.objects.filter(Marker=marker)
 
-    output_file = io.open("list-s3-files-ace_data/mapping_aerial_photography.txt", "a", encoding="utf-8")
+    output_file = io.open("list-s3-files.txt", "a", encoding="utf-8")
 
     for file in files:
         counting += 1
