@@ -5,17 +5,6 @@ import json
 import os
 import io
 
-
-def last_marker():
-    try:
-        state_file = open("state.json", "r")
-    except IOError:
-        return None
-
-    data = json.load(state_file)
-    return data["marker"]
-
-
 def write_state(marker):
     with open("state.json", "w") as state_file:
         state = {"marker": marker}
@@ -37,18 +26,14 @@ def main():
                      endpoint_url="https://s3.epfl.ch")
 
     # bucket = s3.Bucket("13269-d41d8cd98f00b204e9800998ecf8427e") # glace bucket
-    bucket = s3.Bucket("113269-9ccd1ea1e54d9e8cad0e2a15cbf98fa6") # NAS Seagate bucket
+    #bucket = s3.Bucket("113269-9ccd1ea1e54d9e8cad0e2a15cbf98fa6") # NAS Seagate bucket
+    bucket = s3.Bucket("113269-f7f4a7c9863473f08cb883a2b00c95cf") # NAS Seagate bucket
 
     counting = 0
 
-    marker = last_marker()
+    files = bucket.objects.filter(Prefix="ace_data/").all()
 
-    if marker is None:
-        files = bucket.objects.all()
-    else:
-        files = bucket.objects.filter(Marker=marker)
-
-    output_file = io.open("list-s3-files.txt", "a", encoding="utf-8")
+    output_file = io.open("list-s3-files-western-ace_data.txt", "w", encoding="utf-8")
 
     for file in files:
         counting += 1
