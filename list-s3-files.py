@@ -26,6 +26,7 @@ def read_configuration(key):
     data = json.load(state_file)
     return data[key]
 
+
 def main():
     aws_access_key_id = read_configuration("aws_access_key_id")
     aws_secret_access_key = read_configuration("aws_secret_access_key")
@@ -47,7 +48,7 @@ def main():
     else:
         files = bucket.objects.filter(Marker=marker)
 
-    output_file = io.open("list-s3-files.txt", "a", encoding="utf-8")
+    output_file = io.open("list-s3-files-ace_data/mapping_aerial_photography.txt", "a", encoding="utf-8")
 
     for file in files:
         counting += 1

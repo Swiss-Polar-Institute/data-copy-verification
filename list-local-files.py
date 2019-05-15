@@ -10,7 +10,7 @@ def size_of_file(full_path_file):
 
 
 def hash_of_file(full_path_file):
-    blocksize = 128 * 1024 * 1024   # 128 MB
+    blocksize = 512 * 1024 * 1024   # 512 MB
 
     md5 = hashlib.md5()
 
@@ -39,12 +39,12 @@ def calculate_hashes(prefix, directory, output_file):
         for dir in dirs:
             full_path_dir = os.path.join(root, dir)
             relative_dir = full_path_dir[len(directory):]
-            output.write(relative_dir + "\td41d8cd98f00b204e9800998ecf8427e\t0\n")
+            output.write(prefix + relative_dir + "\t0\td41d8cd98f00b204e9800998ecf8427e\n")
 
         for file in files:
             full_path_file = os.path.join(root, file)
             relative_file = full_path_file[len(directory):]
-            output.write(prefix + relative_file + "\t" + hash_of_file(full_path_file) + "\t" + str(size_of_file(full_path_file)) + "\n")
+            output.write(prefix + relative_file + "\t" + str(size_of_file(full_path_file)) + "\t" + hash_of_file(full_path_file) + "\n")
 
         if count == 10000:
             print("Processing " + directory + "Number of files done: " + str(count))
@@ -54,11 +54,11 @@ def calculate_hashes(prefix, directory, output_file):
 
 def main():
     # seagate
-    # shareds = ["ace_data", "data_admin", "data_staging", "ethz_forecast_data", "external_data", "intranet_documents",
-    #            "media ropos", "ship_data", "work_leg1", "work_leg2", "work_leg3", "work_leg4"]
+    shareds = ["ace_data", "data_admin", "data_staging", "ethz_forecast_data", "external_data", "intranet_documents",
+               "media ropos", "ship_data", "work_leg1", "work_leg2", "work_leg3", "work_leg4"]
 
     # western
-    shareds = ["ship_data_end_of_leg4", "media_end_of_leg3", "ace_data_end_of_leg4"]
+    # shareds = ["ship_data_end_of_leg4", "media_end_of_leg3", "ace_data_end_of_leg4"]
 
 
     for shared in shareds:
