@@ -25,27 +25,32 @@ def main():
                      aws_secret_access_key=aws_secret_access_key,
                      endpoint_url="https://s3.epfl.ch")
 
-    # bucket = s3.Bucket("13269-d41d8cd98f00b204e9800998ecf8427e") # glace bucket
-    #bucket = s3.Bucket("113269-9ccd1ea1e54d9e8cad0e2a15cbf98fa6") # NAS Seagate bucket
-    bucket = s3.Bucket("113269-f7f4a7c9863473f08cb883a2b00c95cf") # NAS Seagate bucket
+    # bucket = s3.Bucket("13269-d41d8cd98f00b204e9800998ecf8427e")  # glace bucket
+    #bucket = s3.Bucket("113269-9ccd1ea1e54d9e8cad0e2a15cbf98fa6")  # NAS Seagate bucket
+    bucket = s3.Bucket("113269-f7f4a7c9863473f08cb883a2b00c95cf")   # NAS Western bucket
 
     counting = 0
 
-    files = bucket.objects.filter(Prefix="ace_data/").all()
+    prefixes = ["ace_data_end_of_leg4/", "ship_data_end_of_leg4/", "media_end_of_leg3/"]
 
-    output_file = io.open("list-s3-files-western-ace_data.txt", "w", encoding="utf-8")
+    for prefix in prefixes:
+        files = bucket.objects.filter(Prefix=prefix).all()
 
-    for file in files:
-        counting += 1
-        output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
+        output_file = io.open("list-s3-files-western.txt", "w", encoding="utf-8")
 
-        if counting % 1000 == 0:
-            write_state(file.key)
-            print(str(counting) + " " + file.key)
+        for file in files:
+            counting += 1
+            output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
 
-    output_file.close()
+            if counting % 1000 == 0:
+                write_state(file.key)
+                print(str(counting) + " " + file.key)
 
-    print("finished!")
+        output_file.close()
+
+        print("finished prefix!")
+
+    print("all finished!")
 
 
 if __name__ == "__main__":
