@@ -3,6 +3,8 @@
 import hashlib
 import os
 import datetime
+import argparse
+import time
 
 
 def size_of_file(full_path_file):
@@ -23,7 +25,7 @@ def hash_of_file(full_path_file):
     return md5.hexdigest()
 
 
-def calculate_hashes(prefix, directory, output_file):
+def calculate_hashes(directory, output_file):
     output = open(output_file, "a")
 
     if not directory.endswith("/"):
@@ -39,12 +41,12 @@ def calculate_hashes(prefix, directory, output_file):
         for dir in dirs:
             full_path_dir = os.path.join(root, dir)
             relative_dir = full_path_dir[len(directory):]
-            output.write(prefix + relative_dir + "\t0\td41d8cd98f00b204e9800998ecf8427e\n")
+            output.write(relative_dir + "\t0\td41d8cd98f00b204e9800998ecf8427e\n")
 
         for file in files:
             full_path_file = os.path.join(root, file)
             relative_file = full_path_file[len(directory):]
-            output.write(prefix + relative_file + "\t" + str(size_of_file(full_path_file)) + "\t" + hash_of_file(full_path_file) + "\n")
+            output.write(relative_file + "\t" + str(size_of_file(full_path_file)) + "\t" + hash_of_file(full_path_file) + "\n")
 
         if count == 10000:
             print("Processing " + directory + "Number of files done: " + str(count))
@@ -53,20 +55,18 @@ def calculate_hashes(prefix, directory, output_file):
 
 
 def main():
-    # seagate
-    shareds = ["ace_data", "data_admin", "data_staging", "ethz_forecast_data", "external_data", "intranet_documents",
-               "media ropos", "ship_data", "work_leg1", "work_leg2", "work_leg3", "work_leg4"]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("base_directory", help="Calculate hashes from this directory")
+    parser.add_argument("output_file", help="Output file for the hashes")
 
-    # western
-    # shareds = ["ship_data_end_of_leg4", "media_end_of_leg3", "ace_data_end_of_leg4"]
+    args = parser.parse_args()
 
+    start_time = time.time()
+    calculate_hashes(args.base_directory, args.output_file)
 
-    for shared in shareds:
-        directory = os.path.join("/volume1", shared)
-        output_file = os.path.join("/volume1/data_admin/verification2/" + shared + ".txt")
-        prefix = shared + "/"
-
-        calculate_hashes(prefix, directory, output_file)
+    end_time = time.time()
+    print "Total time in hours: ", (end_time - start_time) / 3600
+    print "See result in:" , args.output_file
 
 if __name__ == "__main__":
     main()
