@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import boto3
 import json
 import os
 import io
 
-boto3.set_stream_logger('')
+# boto3.set_stream_logger('')
 
 def write_state(marker):
     with open("state.json", "w") as state_file:
@@ -92,7 +92,7 @@ def main():
 
         inner_count = 0
         for file in files:
-            print("inner_count:", inner_count)
+            # print("inner_count:", inner_count)
             counting += 1
             output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
 
