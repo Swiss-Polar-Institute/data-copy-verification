@@ -19,14 +19,14 @@ def ignore_file(name, size):
     """
     base_file_name = name.split("/")[-1]
     return size == 0 or "@eaDir/" in name or \
-            base_file_name.startswith(".") or \
-            base_file_name == "Thumbs.db" or \
-            base_file_name == "desktop.ini" or \
-            base_file_name.startswith("~") or \
-            base_file_name.startswith("$")
+        base_file_name.startswith(".") or \
+        base_file_name == "Thumbs.db" or \
+        base_file_name == "desktop.ini" or \
+        base_file_name.startswith("~") or \
+        base_file_name.startswith("$")
 
 
-def file_to_list(file_path, prefix_filter_and_ignore, include_all):
+def read_files_file(file_path, prefix_filter_and_ignore, include_all):
     if prefix_filter_and_ignore is None:
         prefix_filter_and_ignore = ""
 
@@ -36,7 +36,7 @@ def file_to_list(file_path, prefix_filter_and_ignore, include_all):
 
         line_number = 1
 
-        Size_Etag = collections.namedtuple("size_etag", ["size", "etag"])
+        SizeEtag = collections.namedtuple("size_etag", ["size", "etag"])
 
         for line in f.readlines():
             line = line.strip()
@@ -52,11 +52,12 @@ def file_to_list(file_path, prefix_filter_and_ignore, include_all):
 
             lines.add(line)
 
-            if include_all or "-" in line[-5:]:
-                (name, size, file_etag) = line.split("\t")
-                size_etag = Size_Etag(int(size), file_etag)
+            (file_name, size, file_etag) = line.split("\t")
 
-                file_sizes_etags[name] = size_etag
+            if include_all or etag_not_hash(file_etag):
+                size_etag = SizeEtag(int(size), file_etag)
+
+                file_sizes_etags[file_name] = size_etag
 
             line_number += 1
 
@@ -78,8 +79,8 @@ def file_exists_name_size(file_name, size, etag, file_list):
 
 def check_files(source, source_prefix_filter_and_strip, destination, destination_prefix_filter_and_strip, output_file_path):
     # Load source file
-    (origin_files, origin_files_incomplete_etags) = file_to_list(source, source_prefix_filter_and_strip, include_all=False)
-    (destination_files, all_destination_files_size_etags) = file_to_list(destination, destination_prefix_filter_and_strip, include_all=True)
+    (origin_files, origin_files_incomplete_etags) = read_files_file(source, source_prefix_filter_and_strip, include_all=False)
+    (destination_files, all_destination_files_size_etags) = read_files_file(destination, destination_prefix_filter_and_strip, include_all=True)
 
     print("Origin files     :", len(origin_files))
     print("Destination files:", len(destination_files))
