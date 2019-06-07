@@ -6,6 +6,7 @@ import datetime
 import sys
 import os
 
+
 def write_to_log(cmd, exit_code):
     f = open("aws-upload.txt", "a")
     f.write("log\t" + str(datetime.datetime.now()) + "\t" + " ".join(cmd) + "\t" + str(exit_code) + "\n")
@@ -30,7 +31,7 @@ def upload_files(missing_files_file, s3_bucket):
         print("Is going to upload file {} of {}".format(count, total_number_lines))
 
         if os.path.isdir(local_file_name):
-            print("Skips because is a directory")
+            print("Skips because it is a directory")
             write_to_log("No command for {} is a directory".format(file_name), "0")
             continue
 

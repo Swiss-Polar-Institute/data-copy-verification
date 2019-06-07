@@ -6,6 +6,7 @@ import os
 import io
 import argparse
 import sys
+import textwrap
 
 # To enable boto logging
 # boto3.set_stream_logger('')
@@ -15,12 +16,13 @@ def read_configuration(key):
     configuration_path = os.path.join(os.getenv("HOME"), ".list-s3.conf")
 
     if not os.path.isfile(configuration_path):
-        print("File {} doesn't exist".format(configuration_path))
-        print("""It needs to be a json file with this format:
-{
-    "aws_access_key_id": "the_access_key",
-    "aws_secret_access_key": "the_secret_access_key"
-}""")
+        sys.stderr.write("File {} doesn't exist".format(configuration_path))
+        sys.stderr.write(textwrap.dedent("""\
+            It needs to be a json file with this format:
+            {
+                "aws_access_key_id": "the_access_key",
+                "aws_secret_access_key": "the_secret_access_key"
+            }"""))
 
         sys.exit(1)
 
@@ -29,11 +31,11 @@ def read_configuration(key):
         data = json.load(fp)
 
     except json.JSONDecodeError:
-        print("Not a JSON valid file {}".format(configuration_path))
+        sys.stderr.write("Not a JSON valid file {}".format(configuration_path))
         sys.exit(1)
 
     if key not in data:
-        print("Missing key {} in {}".format(key, configuration_path))
+        sys.stderr.write("Missing key {} in {}".format(key, configuration_path))
         sys.exit(1)
 
     value = data[key]
@@ -42,7 +44,7 @@ def read_configuration(key):
 
 def create_list_of_files(bucket, output_file_name):
     if os.path.isfile(output_file_name):
-        print("File {} already exists, aborting".format(output_file_name))
+        sys.stderr.write("File {} already exists, aborting".format(output_file_name))
         sys.exit(1)
 
     aws_access_key_id = read_configuration("aws_access_key_id")
