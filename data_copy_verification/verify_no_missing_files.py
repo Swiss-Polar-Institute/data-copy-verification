@@ -3,13 +3,20 @@
 import argparse
 
 
-def file_to_list(file_path):
+def file_to_list(file_path, prefix_filter_and_ignore):
+    if prefix_filter_and_ignore is None:
+        prefix_filter_and_ignore = ""
+
     with open(file_path) as f:
         files_invalid_hash = {}
         lines = set()
 
         for line in f.readlines():
             line = line.strip()
+
+            if line.startswith(prefix_filter_and_ignore):
+                line = line[len(prefix_filter_and_ignore):]
+
             lines.add(line)
 
             if "-" in line[-5:]:
@@ -27,10 +34,10 @@ def file_exists_name_size(file_name, size, file_list):
     return False
 
 
-def check_files(source, destination, output_file_path):
+def check_files(source, source_prefix_filter_and_strip, destination, destination_prefix_filter_and_strip, output_file_path):
     # Load source file
-    (origin_files, _) = file_to_list(source)
-    (destination_files, destination_files_invalid_hash) = file_to_list(destination)
+    (origin_files, _) = file_to_list(source, source_prefix_filter_and_strip)
+    (destination_files, destination_files_invalid_hash) = file_to_list(destination, destination_prefix_filter_and_strip)
 
     print("Origin files     :", len(origin_files))
     print("Destination files:", len(destination_files))
@@ -68,10 +75,14 @@ def main():
     parser.add_argument("source", help="Source files: will check that all these files are in file2")
     parser.add_argument("destination", help="Destination files: will check that contains all the source files")
     parser.add_argument("output", help="Output file with the results")
+    parser.add_argument("--source-prefix-filter-and-strip", help="Will read only source files starting with the given prefix AND will remove the prefix in the generated list")
+    parser.add_argument("--destination-prefix-filter-and-strip", help="Will read only destination files starting with the given prefix AND will remove the prefix in the generated list")
 
     args = parser.parse_args()
 
-    check_files(args.source, args.destination, args.output)
+    check_files(args.source, args.source_prefix_filter_and_strip,
+                args.destination, args.destination_prefix_filter_and_strip,
+                args.output)
 
 
 if __name__ == "__main__":
