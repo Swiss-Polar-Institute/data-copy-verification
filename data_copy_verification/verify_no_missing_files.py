@@ -19,7 +19,7 @@ def file_to_list(file_path):
         return lines, files_invalid_hash
 
 
-def check_by_name(file_name, size, file_list):
+def file_exists_name_size(file_name, size, file_list):
     if file_name in file_list and file_list[file_name] == size:
         print("File existence based on name+size only: ", file_name)
         return True
@@ -27,10 +27,10 @@ def check_by_name(file_name, size, file_list):
     return False
 
 
-def check_files(source, destination, volume, output_file_path):
+def check_files(source, destination, output_file_path):
     # Load source file
-    (origin_files, _) = file_to_list(source, volume)
-    (destination_files, destination_files_invalid_hash) = file_to_list(destination, volume)
+    (origin_files, _) = file_to_list(source)
+    (destination_files, destination_files_invalid_hash) = file_to_list(destination)
 
     print("Origin files     :", len(origin_files))
     print("Destination files:", len(destination_files))
@@ -49,7 +49,7 @@ def check_files(source, destination, volume, output_file_path):
             size = int(size)
             base_file_name = name.split("/")[-1]
             if size != 0 and "@eaDir/" not in name and not base_file_name.startswith(".") and base_file_name != "Thumbs.db" and base_file_name != "desktop.ini" and not base_file_name.startswith("~") and not base_file_name.startswith("$"):
-                file_name_exists = check_by_name(name, size, destination_files_invalid_hash)
+                file_name_exists = file_exists_name_size(name, size, destination_files_invalid_hash)
                 if not file_name_exists:
                     output_file.write(origin_file + "\n")
                     missing_files_count += 1
