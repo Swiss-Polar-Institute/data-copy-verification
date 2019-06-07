@@ -1,6 +1,7 @@
 from data_copy_verification import verify_no_missing_files
 import unittest
 import tempfile
+import collections
 
 
 class TestVerifyNoMissingFiles(unittest.TestCase):
@@ -25,20 +26,24 @@ class TestVerifyNoMissingFiles(unittest.TestCase):
 
     def test_file_to_list(self):
         fd_temp = self._generate_file()
-        set_of_files = verify_no_missing_files.file_to_list(fd_temp.name, None)
+        set_of_files = verify_no_missing_files.file_to_list(fd_temp.name, None, include_all=False)
 
         self.assertEqual(set_of_files[0], {"ace_data/ACS/ace_2017-02-19+15-52.bin\t171801\t9dbba3032755f200b3dc3ac79fdb9291",
                                            "ace_data/a_file/big_file\t3006477107\te7a30baab848c6560ef87aac602583-1"})
-        self.assertEqual(set_of_files[1], {"ace_data/a_file/big_file": 3006477107})
+
+        Size_Etag = collections.namedtuple("size_etag", ["size", "etag"])
+        size_etag = Size_Etag(3006477107, "e7a30baab848c6560ef87aac602583-1")
+
+        self.assertEqual(set_of_files[1], {"ace_data/a_file/big_file": size_etag})
 
     def test_check_by_name(self):
         fd_temp = self._generate_file()
 
-        files = verify_no_missing_files.file_to_list(fd_temp.name, None)
+        files = verify_no_missing_files.file_to_list(fd_temp.name, None, include_all=False)
 
-        self.assertFalse(verify_no_missing_files.file_exists_name_size("does_not_exist", 1000, files[1]))
-        self.assertFalse(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 2222, files[1]))
-        self.assertTrue(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 3006477107, files[1]))
+        self.assertFalse(verify_no_missing_files.file_exists_name_size("does_not_exist", 1000, "94292929424aaa", files[1]))
+        self.assertFalse(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 2222, "94292929424aaa", files[1]))
+        self.assertTrue(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 3006477107, "94292929424aaa", files[1]))
 
     def test_check_files_no_missing_files(self):
         origin_temp = tempfile.NamedTemporaryFile(mode="w")

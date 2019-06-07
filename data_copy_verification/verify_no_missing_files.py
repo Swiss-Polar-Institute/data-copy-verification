@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import collections
 
 
 def abort_if_line_incorrect(line, file_path, line_number):
@@ -11,15 +12,31 @@ def abort_if_line_incorrect(line, file_path, line_number):
         sys.exit(1)
 
 
-def file_to_list(file_path, prefix_filter_and_ignore):
+def ignore_file(name, size):
+    """ returns True if the file was not copied on purpose.
+
+    Certain file names were not copied from the NAS to the object storage.
+    """
+    base_file_name = name.split("/")[-1]
+    return size == 0 or "@eaDir/" in name or \
+            base_file_name.startswith(".") or \
+            base_file_name == "Thumbs.db" or \
+            base_file_name == "desktop.ini" or \
+            base_file_name.startswith("~") or \
+            base_file_name.startswith("$")
+
+
+def file_to_list(file_path, prefix_filter_and_ignore, include_all):
     if prefix_filter_and_ignore is None:
         prefix_filter_and_ignore = ""
 
     with open(file_path, mode="r", newline="\n") as f:
-        files_invalid_hash = {}
+        file_sizes_etags = {}
         lines = set()
 
         line_number = 1
+
+        Size_Etag = collections.namedtuple("size_etag", ["size", "etag"])
 
         for line in f.readlines():
             line = line.strip()
@@ -35,17 +52,24 @@ def file_to_list(file_path, prefix_filter_and_ignore):
 
             lines.add(line)
 
-            if "-" in line[-5:]:
-                (name, size, file_hash) = line.split("\t")
-                files_invalid_hash[name] = int(size)
+            if include_all or "-" in line[-5:]:
+                (name, size, file_etag) = line.split("\t")
+                size_etag = Size_Etag(int(size), file_etag)
+
+                file_sizes_etags[name] = size_etag
 
             line_number += 1
 
-        return lines, files_invalid_hash
+        return lines, file_sizes_etags
 
 
-def file_exists_name_size(file_name, size, file_list):
-    if file_name in file_list and file_list[file_name] == size:
+def etag_not_hash(etag):
+    return "-" in etag[-5:]
+
+
+def file_exists_name_size(file_name, size, etag, file_list):
+    if file_name in file_list and file_list[file_name].size == size and \
+            (etag_not_hash(file_list[file_name].etag or etag_not_hash(etag))):
         print("File existence based on name+size only: ", file_name)
         return True
 
@@ -54,8 +78,8 @@ def file_exists_name_size(file_name, size, file_list):
 
 def check_files(source, source_prefix_filter_and_strip, destination, destination_prefix_filter_and_strip, output_file_path):
     # Load source file
-    (origin_files, origin_files_invalid_hash) = file_to_list(source, source_prefix_filter_and_strip)
-    (destination_files, destination_files_invalid_hash) = file_to_list(destination, destination_prefix_filter_and_strip)
+    (origin_files, origin_files_incomplete_etags) = file_to_list(source, source_prefix_filter_and_strip, include_all=False)
+    (destination_files, all_destination_files_size_etags) = file_to_list(destination, destination_prefix_filter_and_strip, include_all=True)
 
     print("Origin files     :", len(origin_files))
     print("Destination files:", len(destination_files))
@@ -70,20 +94,16 @@ def check_files(source, source_prefix_filter_and_strip, destination, destination
         file_in_destination = origin_file in destination_files
 
         if not file_in_destination:
-            (name, size, file_hash) = origin_file.split("\t")
+            (name, size, file_etag) = origin_file.split("\t")
             size = int(size)
-            base_file_name = name.split("/")[-1]
-            if size != 0 and "@eaDir/" not in name and \
-                    not base_file_name.startswith(".") and \
-                    base_file_name != "Thumbs.db" and \
-                    base_file_name != "desktop.ini" and \
-                    not base_file_name.startswith("~") and \
-                    not base_file_name.startswith("$"):
 
-                file_name_exists = file_exists_name_size(name, size, destination_files_invalid_hash)
-                if not file_name_exists:
-                    output_file.write(origin_file + "\n")
-                    missing_files_count += 1
+            if ignore_file(name, size):
+                continue
+
+            file_name_exists = file_exists_name_size(name, size, file_etag, all_destination_files_size_etags)
+            if not file_name_exists:
+                output_file.write(origin_file + "\n")
+                missing_files_count += 1
 
         count += 1
         if count % 10000 == 0:
