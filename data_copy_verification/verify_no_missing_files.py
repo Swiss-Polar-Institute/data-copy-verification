@@ -54,7 +54,7 @@ def read_files_file(file_path, prefix_filter_and_ignore, include_all):
 
             (file_name, size, file_etag) = line.split("\t")
 
-            if include_all or etag_not_hash(file_etag):
+            if include_all or not etag_is_hash(file_etag):
                 size_etag = SizeEtag(int(size), file_etag)
 
                 file_sizes_etags[file_name] = size_etag
@@ -64,14 +64,13 @@ def read_files_file(file_path, prefix_filter_and_ignore, include_all):
         return lines, file_sizes_etags
 
 
-def etag_not_hash(etag):
-    return "-" in etag[-5:]
+def etag_is_hash(etag):
+    return "-" not in etag
 
 
 def file_exists_name_size(file_name, size, etag, file_list):
     if file_name in file_list and file_list[file_name].size == size and \
-            (etag_not_hash(file_list[file_name].etag or etag_not_hash(etag))):
-        print("File existence based on name+size only: ", file_name)
+            not (etag_is_hash(file_list[file_name].etag) and etag_is_hash(etag)):
         return True
 
     return False
@@ -111,6 +110,9 @@ def check_files(source, source_prefix_filter_and_strip, destination, destination
             print("Done {} of {}".format(count, len(origin_files)))
 
     output_file.close()
+
+    print("Source file: {} / Prefix filter+strip: {} ".format(source, source_prefix_filter_and_strip))
+    print("Destination file: {} / Prefix filter+strip: {}".format(destination, destination_prefix_filter_and_strip))
 
     print("Finished - Missing files: {}. See output at: {}".format(missing_files_count, output_file_path))
 

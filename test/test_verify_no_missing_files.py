@@ -154,6 +154,23 @@ class TestVerifyNoMissingFiles(unittest.TestCase):
         self.assertListEqual(sorted(self._read_file_to_list(output_file.name)),
                              sorted(['ACS/test\t242131\t9cbce1ae85a074caa40df29afd9fb590']))
 
+    def test_file_not_missing_etag(self):
+        origin_temp = tempfile.NamedTemporaryFile(mode="w")
+        origin_temp.write("not_missing_file\t242424\t9dbba3032755f200b3dc3ac79fdb92-1\n")
+
+        destination_temp = tempfile.NamedTemporaryFile(mode="w")
+        destination_temp.write("not_missing_file\t242424\ta5cb30d858ec1f0be3b1bc08ea85e640")
+
+        origin_temp.seek(0)
+        destination_temp.seek(0)
+
+        output_file = tempfile.NamedTemporaryFile()
+
+        verify_no_missing_files.check_files(origin_temp.name, None, destination_temp.name, None, output_file.name)
+
+        self.assertEqual(self._read_file_to_list(output_file.name), [])
+
+
 
 if __name__ == '__main__':
     unittest.main()
