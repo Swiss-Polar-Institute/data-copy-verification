@@ -12,15 +12,15 @@ def size_of_file(full_path_file):
 
 
 def hash_of_file(full_path_file):
-    blocksize = 512 * 1024 * 1024   # 512 MB
+    block_size = 512 * 1024 * 1024   # 512 MB
 
     md5 = hashlib.md5()
 
     with open(full_path_file, "rb") as file_calculating_hash:
-        file_buffer = file_calculating_hash.read(blocksize)
+        file_buffer = file_calculating_hash.read(block_size)
         while len(file_buffer) > 0:
             md5.update(file_buffer)
-            file_buffer = file_calculating_hash.read(blocksize)
+            file_buffer = file_calculating_hash.read(block_size)
 
     return md5.hexdigest()
 
@@ -65,8 +65,8 @@ def main():
     calculate_hashes(args.base_directory, args.output_file)
 
     end_time = time.time()
-    print "Total time in hours: ", (end_time - start_time) / 3600
-    print "See result in:" , args.output_file
+    print("Total time in hours: ", (end_time - start_time) / 3600)
+    print("See result in:" , args.output_file)
 
 if __name__ == "__main__":
     main()

@@ -4,22 +4,47 @@ import boto3
 import json
 import os
 import io
+import argparse
+import sys
 
+# To enable boto logging
 # boto3.set_stream_logger('')
-
-def write_state(marker):
-    with open("state.json", "w") as state_file:
-        state = {"marker": marker}
-        json.dump(state, state_file)
 
 
 def read_configuration(key):
-    state_file = open(os.path.join(os.getenv("HOME"), ".list-s3.conf"), "r")
-    data = json.load(state_file)
-    return data[key]
+    configuration_path = os.path.join(os.getenv("HOME"), ".list-s3.conf")
+
+    if not os.path.isfile(configuration_path):
+        print("File {} doesn't exist".format(configuration_path))
+        print("""It needs to be a json file with this format:
+{
+    "aws_access_key_id": "the_access_key",
+    "aws_secret_access_key": "the_secret_access_key"
+}""")
+
+        sys.exit(1)
+
+    try:
+        fp = open(configuration_path, "r")
+        data = json.load(fp)
+
+    except json.JSONDecodeError:
+        print("Not a JSON valid file {}".format(configuration_path))
+        sys.exit(1)
+
+    if key not in data:
+        print("Missing key {} in {}".format(key, configuration_path))
+        sys.exit(1)
+
+    value = data[key]
+    return value
 
 
-def main():
+def create_list_of_files(bucket, output_file_name):
+    if os.path.isfile(output_file_name):
+        print("File {} already exists, aborting".format(output_file_name))
+        sys.exit(1)
+
     aws_access_key_id = read_configuration("aws_access_key_id")
     aws_secret_access_key = read_configuration("aws_secret_access_key")
 
@@ -28,90 +53,31 @@ def main():
                      aws_secret_access_key=aws_secret_access_key,
                      endpoint_url="https://s3.epfl.ch")
 
-    # bucket = s3.Bucket("13269-d41d8cd98f00b204e9800998ecf8427e")  # glace bucket
-    # bucket = s3.Bucket("113269-9ccd1ea1e54d9e8cad0e2a15cbf98fa6")  # NAS Seagate bucket
-    bucket = s3.Bucket("113269-f7f4a7c9863473f08cb883a2b00c95cf")   # NAS Western bucket
-
-    counting = 0
-
-    prefixes = ["intranet_documents",
-     "intranet_documents_end_of_leg2",
-     "ace_data",
-     "ace_data_end_of_leg2",
-     "ace_data_end_of_leg3",
-     "ace_data_old",
-     "ace_data_old2",
-     "data_admin",
-     "data_admin_end_of_leg2",
-     "data_admin_end_of_leg3",
-     "data_admin_end_of_leg4",
-     "data_staging",
-     "data_staging_end_of_leg2",
-     "data_staging_end_of_leg3",
-     "data_staging_end_of_leg4",
-     "data_staging_old2",
-     "ethz_forecast_data_end_of_leg4",
-     "ethz_forecast_data_old2",
-     "external_data",
-     "external_data_end_of_leg2",
-     "external_data_end_of_leg3",
-     "external_data_end_of_leg4",
-     "external_data_old2",
-     "intranet_documents_end_of_leg3",
-     "intranet_documents_end_of_leg4",
-     "intranet_documents_old2",
-     "media_old2",
-     "NetBackup",
-     "ropos_20170217",
-     "scripts",
-     "ship_data",
-     "ship_data_end_of_leg2",
-     "ship_data_end_of_leg3",
-     "ship_data_old2",
-     "work_leg1",
-     "work_leg1_end_of_leg2",
-     "work_leg1_end_of_leg4",
-     "work_leg1_old2",
-     "work_leg2",
-     "work_leg2_end_of_leg2",
-     "work_leg2_end_of_leg4",
-     "work_leg2_old2",
-     "work_leg3",
-     "work_leg3_end_of_leg2",
-     "work_leg3_end_of_leg3",
-     "work_leg3_end_of_leg4",
-     "work_leg3_old2",
-     "work_leg4_end_of_leg4"]
+    bucket = s3.Bucket(bucket)
 
     count = 0
-    for prefix in prefixes:
-        files = bucket.objects.filter(Prefix=prefix + "/").all()
+    files = bucket.objects.filter(Prefix="").all()
 
-        output_file_name = "list-s3-files-western-{}".format(prefix)
-        output_file = io.open(output_file_name + ".txt", "w", encoding="utf-8")
+    output_file = io.open(output_file_name, "w", encoding="utf-8")
 
-        inner_count = 0
-        for file in files:
-            # print("inner_count:", inner_count)
-            counting += 1
-            output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
-
-            if counting % 1000 == 0:
-                write_state(file.key)
-                print(str(counting) + " " + file.key)
-
-            inner_count += 1
-
-        output_file.close()
-        os.system("gzip {}.txt".format(output_file_name))
-        os.system("scp {}.txt.gz admin@wiki.glaceexpedition.ch:backups/s3".format(output_file_name))
-        os.system("rm {}.txt.gz".format(output_file_name))
-
+    inner_count = 0
+    for file in files:
         count += 1
-        print("finished {} {}/{}".format(prefix, count, len(prefixes)))
+        output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
 
-    print("all finished!")
+        if count % 1000 == 0:
+            print("{} {}".format(count, file.key))
+
+        inner_count += 1
+
+    output_file.close()
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="List all the files in a bucket and saves it with its e_tag (usually md5) into destination_file")
+    parser.add_argument("bucket", help="Bucket to list the files from")
+    parser.add_argument("destination_file", help="Destination file where to save the list of files")
+
+    args = parser.parse_args()
+
+    create_list_of_files(args.bucket, args.destination_file)
