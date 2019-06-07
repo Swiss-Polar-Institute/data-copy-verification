@@ -1,27 +1,45 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
+
+
+def abort_if_line_incorrect(line, file_path, line_number):
+    if line.count("\t") != 2:
+        print("File path: {} Line Number: {} Not having 2 tabs".format(file_path, line_number), file=sys.stderr)
+        print("Line: {}".format(line), file=sys.stderr)
+        sys.exit(1)
 
 
 def file_to_list(file_path, prefix_filter_and_ignore):
     if prefix_filter_and_ignore is None:
         prefix_filter_and_ignore = ""
 
-    with open(file_path) as f:
+    with open(file_path, mode="r", newline="\n") as f:
         files_invalid_hash = {}
         lines = set()
+
+        line_number = 1
 
         for line in f.readlines():
             line = line.strip()
 
-            if line.startswith(prefix_filter_and_ignore):
-                line = line[len(prefix_filter_and_ignore):]
+            abort_if_line_incorrect(line, file_path, line_number)
+
+            if not line.startswith(prefix_filter_and_ignore):
+                continue
+
+            line = line[len(prefix_filter_and_ignore):]
+
+            abort_if_line_incorrect(line, file_path, line_number)
 
             lines.add(line)
 
             if "-" in line[-5:]:
                 (name, size, file_hash) = line.split("\t")
                 files_invalid_hash[name] = int(size)
+
+            line_number += 1
 
         return lines, files_invalid_hash
 
@@ -36,7 +54,7 @@ def file_exists_name_size(file_name, size, file_list):
 
 def check_files(source, source_prefix_filter_and_strip, destination, destination_prefix_filter_and_strip, output_file_path):
     # Load source file
-    (origin_files, _) = file_to_list(source, source_prefix_filter_and_strip)
+    (origin_files, origin_files_invalid_hash) = file_to_list(source, source_prefix_filter_and_strip)
     (destination_files, destination_files_invalid_hash) = file_to_list(destination, destination_prefix_filter_and_strip)
 
     print("Origin files     :", len(origin_files))
@@ -55,7 +73,13 @@ def check_files(source, source_prefix_filter_and_strip, destination, destination
             (name, size, file_hash) = origin_file.split("\t")
             size = int(size)
             base_file_name = name.split("/")[-1]
-            if size != 0 and "@eaDir/" not in name and not base_file_name.startswith(".") and base_file_name != "Thumbs.db" and base_file_name != "desktop.ini" and not base_file_name.startswith("~") and not base_file_name.startswith("$"):
+            if size != 0 and "@eaDir/" not in name and \
+                    not base_file_name.startswith(".") and \
+                    base_file_name != "Thumbs.db" and \
+                    base_file_name != "desktop.ini" and \
+                    not base_file_name.startswith("~") and \
+                    not base_file_name.startswith("$"):
+
                 file_name_exists = file_exists_name_size(name, size, destination_files_invalid_hash)
                 if not file_name_exists:
                     output_file.write(origin_file + "\n")
