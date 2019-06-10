@@ -37,6 +37,7 @@ def read_files_file(file_path, prefix_filter_and_ignore, include_all):
         line_number = 1
 
         SizeEtag = collections.namedtuple("size_etag", ["size", "etag"])
+        File = collections.namedtuple("file", ["path", "size", "etag"])
 
         for line in f.readlines():
             line = line.strip()
@@ -50,14 +51,17 @@ def read_files_file(file_path, prefix_filter_and_ignore, include_all):
 
             abort_if_line_incorrect(line, file_path, line_number)
 
-            lines.add(line)
+            (file_path, file_size, file_etag) = line.split("\t")
 
-            (file_name, size, file_etag) = line.split("\t")
+            file_size = int(file_size)
+            file = File(file_path, file_size, file_etag)
 
-            if include_all or not etag_is_hash(file_etag):
-                size_etag = SizeEtag(int(size), file_etag)
+            lines.add(file)
 
-                file_sizes_etags[file_name] = size_etag
+            if include_all or not etag_is_hash(file.etag):
+                size_etag = SizeEtag(file.size, file.etag)
+
+                file_sizes_etags[file.path] = size_etag
 
             line_number += 1
 
@@ -94,15 +98,12 @@ def check_files(source, source_prefix_filter_and_strip, destination, destination
         file_in_destination = origin_file in destination_files
 
         if not file_in_destination:
-            (name, size, file_etag) = origin_file.split("\t")
-            size = int(size)
-
-            if ignore_file(name, size):
+            if ignore_file(origin_file.path, origin_file.size):
                 continue
 
-            file_name_exists = file_exists_name_size(name, size, file_etag, all_destination_files_size_etags)
+            file_name_exists = file_exists_name_size(origin_file.path, origin_file.size, origin_file.etag, all_destination_files_size_etags)
             if not file_name_exists:
-                output_file.write(origin_file + "\n")
+                output_file.write("{}\t{}\t{}\n".format(origin_file.path, origin_file.size, origin_file.etag))
                 missing_files_count += 1
 
         count += 1

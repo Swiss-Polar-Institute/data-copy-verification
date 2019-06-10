@@ -27,8 +27,10 @@ class TestVerifyNoMissingFiles(unittest.TestCase):
         fd_temp = self._generate_file()
         set_of_files = verify_no_missing_files.read_files_file(fd_temp.name, None, include_all=False)
 
-        self.assertEqual(set_of_files[0], {"ace_data/ACS/ace_2017-02-19+15-52.bin\t171801\t9dbba3032755f200b3dc3ac79fdb9291",
-                                           "ace_data/a_file/big_file\t3006477107\te7a30baab848c6560ef87aac602583-1"})
+        File = collections.namedtuple("file", ["path", "size", "etag"])
+
+        self.assertEqual(set_of_files[0], {File("ace_data/ACS/ace_2017-02-19+15-52.bin", 171801, "9dbba3032755f200b3dc3ac79fdb9291"),
+                                           File("ace_data/a_file/big_file", 3006477107, "e7a30baab848c6560ef87aac602583-1")})
 
         SizeEtag = collections.namedtuple("size_etag", ["size", "etag"])
         size_etag = SizeEtag(3006477107, "e7a30baab848c6560ef87aac602583-1")
