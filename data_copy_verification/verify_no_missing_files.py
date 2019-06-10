@@ -3,6 +3,15 @@
 import argparse
 import sys
 import collections
+import os
+
+
+def namedTupleFile():
+    return collections.namedtuple("file", ["path", "size", "etag"])
+
+
+def namedTupleSizeEtag():
+    return collections.namedtuple("size_etag", ["size", "etag"])
 
 
 def abort_if_line_incorrect(line, file_path, line_number):
@@ -26,18 +35,29 @@ def ignore_file(name, size):
         base_file_name.startswith("$")
 
 
-def read_files_file(file_path, prefix_filter_and_ignore, include_all):
+def remove_path(file):
+    Result = namedTupleFile()
+
+    result = Result(os.path.basename(file.path), file.size, file.etag)
+
+    return result
+
+
+def read_files_file(file_path, prefix_filter_and_ignore, include_all, generate_file_name_only):
     if prefix_filter_and_ignore is None:
         prefix_filter_and_ignore = ""
 
     with open(file_path, mode="r", newline="\n") as f:
-        file_sizes_etags = {}
-        lines = set()
+        file_sizes_etags_full_path = {}
+        file_sizes_etags_only_names = {}
+
+        all_files_full_path = set()
+        all_files_only_names = set()
 
         line_number = 1
 
-        SizeEtag = collections.namedtuple("size_etag", ["size", "etag"])
-        File = collections.namedtuple("file", ["path", "size", "etag"])
+        File = namedTupleFile()
+        SizeEtag = namedTupleSizeEtag()
 
         for line in f.readlines():
             line = line.strip()
@@ -56,34 +76,51 @@ def read_files_file(file_path, prefix_filter_and_ignore, include_all):
             file_size = int(file_size)
             file = File(file_path, file_size, file_etag)
 
-            lines.add(file)
+            all_files_full_path.add(file)
+            all_files_only_names.add(remove_path(file))
 
             if include_all or not etag_is_hash(file.etag):
                 size_etag = SizeEtag(file.size, file.etag)
+                file_sizes_etags_full_path[file.path] = size_etag
 
-                file_sizes_etags[file.path] = size_etag
+                if generate_file_name_only:
+                    file_sizes_etags_only_names[os.path.basename(file.path)] = size_etag
 
             line_number += 1
 
-        return lines, file_sizes_etags
+        FilesStructures = collections.namedtuple("FilesStructures", ["all_files_full_path",
+                                                                     "file_sizes_etags_full_path",
+                                                                     "all_files_only_names",
+                                                                     "file_sizes_etags_only_names"])
+
+        return FilesStructures(all_files_full_path, file_sizes_etags_full_path,
+                               all_files_only_names, file_sizes_etags_only_names)
 
 
 def etag_is_hash(etag):
     return "-" not in etag
 
 
-def file_exists_name_size(file_name, size, etag, file_list):
-    if file_name in file_list and file_list[file_name].size == size and \
-            not (etag_is_hash(file_list[file_name].etag) and etag_is_hash(etag)):
+def file_exists_name_size(file_name, size, etag, file_dictionary):
+    if file_name in file_dictionary and file_dictionary[file_name].size == size and \
+            not (etag_is_hash(file_dictionary[file_name].etag) and etag_is_hash(etag)):
         return True
 
     return False
 
 
-def check_files(source, source_prefix_filter_and_strip, destination, destination_prefix_filter_and_strip, output_file_path):
+def file_exists_ignore_path(file_origin, file_list):
+    file_origin_name = os.path.basename(file_origin.path)
+
+
+
+
+def check_files(source, source_prefix_filter_and_strip,
+                destination, destination_prefix_filter_and_strip,
+                output_file_path, ignore_path):
     # Load source file
-    (origin_files, origin_files_incomplete_etags) = read_files_file(source, source_prefix_filter_and_strip, include_all=False)
-    (destination_files, all_destination_files_size_etags) = read_files_file(destination, destination_prefix_filter_and_strip, include_all=True)
+    (origin_files, origin_files_incomplete_etags, origin_files_name_only, origin_files_incomplete_tags_name_only) = read_files_file(source, source_prefix_filter_and_strip, include_all=False, generate_file_name_only=ignore_path)
+    (destination_files, all_destination_files_size_etags, destination_files_name_only, destination_files_incomplete_tags_name_only) = read_files_file(destination, destination_prefix_filter_and_strip, include_all=True, generate_file_name_only=ignore_path)
 
     print("Origin files     :", len(origin_files))
     print("Destination files:", len(destination_files))
@@ -102,6 +139,10 @@ def check_files(source, source_prefix_filter_and_strip, destination, destination
                 continue
 
             file_name_exists = file_exists_name_size(origin_file.path, origin_file.size, origin_file.etag, all_destination_files_size_etags)
+
+            if not file_name_exists and ignore_path:
+                file_name_exists = file_exists_ignore_path(origin_file, all_destination_files_size_etags)
+
             if not file_name_exists:
                 output_file.write("{}\t{}\t{}\n".format(origin_file.path, origin_file.size, origin_file.etag))
                 missing_files_count += 1
@@ -130,7 +171,7 @@ def main():
 
     check_files(args.source, args.source_prefix_filter_and_strip,
                 args.destination, args.destination_prefix_filter_and_strip,
-                args.output)
+                args.output, False)
 
 
 if __name__ == "__main__":
