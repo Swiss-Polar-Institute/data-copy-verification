@@ -42,9 +42,9 @@ class TestVerifyNoMissingFiles(unittest.TestCase):
 
         files = verify_no_missing_files.read_files_file(fd_temp.name, None, include_all=False, generate_file_name_only=False)
 
-        self.assertFalse(verify_no_missing_files.file_exists_name_size("does_not_exist", 1000, "94292929424aaa", files[1]))
-        self.assertFalse(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 2222, "94292929424aaa", files[1]))
-        self.assertTrue(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 3006477107, "94292929424aaa", files[1]))
+        self.assertFalse(verify_no_missing_files.file_exists_name_size("does_not_exist", 1000, "94292929424aaa", files.file_sizes_etags_full_path))
+        self.assertFalse(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 2222, "94292929424aaa", files.file_sizes_etags_full_path))
+        self.assertTrue(verify_no_missing_files.file_exists_name_size("ace_data/a_file/big_file", 3006477107, "94292929424aaa", files.file_sizes_etags_full_path))
 
     def test_check_files_no_missing_files(self):
         origin_temp = tempfile.NamedTemporaryFile(mode="w")

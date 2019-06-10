@@ -109,16 +109,15 @@ def file_exists_name_size(file_name, size, etag, file_dictionary):
     return False
 
 
-
 def check_files(source, source_prefix_filter_and_strip,
                 destination, destination_prefix_filter_and_strip,
                 output_file_path, ignore_path):
     # Load source file
-    (origin_files, origin_files_incomplete_etags, origin_files_name_only, origin_files_incomplete_tags_name_only) = read_files_file(source, source_prefix_filter_and_strip, include_all=False, generate_file_name_only=ignore_path)
-    (destination_files, all_destination_files_size_etags, destination_files_name_only, destination_files_incomplete_tags_name_only) = read_files_file(destination, destination_prefix_filter_and_strip, include_all=True, generate_file_name_only=ignore_path)
+    origin_files = read_files_file(source, source_prefix_filter_and_strip, include_all=False, generate_file_name_only=ignore_path)
+    destination_files = read_files_file(destination, destination_prefix_filter_and_strip, include_all=True, generate_file_name_only=ignore_path)
 
-    print("Origin files     :", len(origin_files))
-    print("Destination files:", len(destination_files))
+    print("Origin files     :", len(origin_files.all_files_full_path))
+    print("Destination files:", len(destination_files.all_files_full_path))
 
     count = 0
 
@@ -126,11 +125,11 @@ def check_files(source, source_prefix_filter_and_strip,
 
     missing_files_count = 0
 
-    for origin_file in origin_files:
+    for origin_file in origin_files.all_files_full_path:
         if ignore_path:
             origin_file_without_path = remove_path(origin_file)
 
-        file_in_destination = origin_file in destination_files or (ignore_path and origin_file_without_path in destination_files_name_only)
+        file_in_destination = origin_file in destination_files.all_files_full_path or (ignore_path and origin_file_without_path in destination_files.all_files_only_names)
 
         if file_in_destination:
             continue
@@ -139,14 +138,14 @@ def check_files(source, source_prefix_filter_and_strip,
             continue
 
         file_name_exists = file_exists_name_size(origin_file.path, origin_file.size,
-                                                 origin_file.etag, all_destination_files_size_etags)
+                                                 origin_file.etag, destination_files.file_sizes_etags_full_path)
 
         if file_name_exists:
             continue
 
         if ignore_path:
             file_name_exists = file_exists_name_size(origin_file_without_path.path, origin_file_without_path.size,
-                                                     origin_file_without_path.etag, destination_files_incomplete_tags_name_only)
+                                                     origin_file_without_path.etag, destination_files.file_sizes_etags_only_names)
 
             if file_name_exists:
                 continue
