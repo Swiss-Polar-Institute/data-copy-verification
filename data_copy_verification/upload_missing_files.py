@@ -5,6 +5,10 @@ import subprocess
 import datetime
 import os
 
+# This was used only once to upload a series of files. It has not been tested more than that case.
+# In normal circumstances better avoid using it and upload the files using another software, use
+# the rest of utilities to *verify* the data instead of this one to upload it.
+
 
 def write_to_log(cmd, exit_code):
     f = open("aws-upload.txt", "a")

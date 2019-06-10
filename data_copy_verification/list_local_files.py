@@ -56,8 +56,9 @@ def calculate_hashes(directory, output_file):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("base_directory", help="Calculate hashes from this directory")
-    parser.add_argument("output_file", help="Output file for the hashes")
+    parser.description("From a local system it generates a file with list of files, sizes and md5. md5 because this is what Amazon S3 uses as ETag (unless the file was uploaded in chunks)")
+    parser.add_argument("base_directory", help="root directory of the list of files")
+    parser.add_argument("output_file", help="Output file: each line contains the name of the file, file size (bytes) and md5 hash")
 
     args = parser.parse_args()
 
@@ -65,8 +66,9 @@ def main():
     calculate_hashes(args.base_directory, args.output_file)
 
     end_time = time.time()
-    print("Total time in hours: ", (end_time - start_time) / 3600)
-    print("See result in:" , args.output_file)
+    print("Total time in hours {0:.2f}: ", (end_time - start_time) / 3600)
+    print("Output file:" , args.output_file)
+
 
 if __name__ == "__main__":
     main()

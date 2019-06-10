@@ -60,7 +60,7 @@ def read_files_file(data_file_path, prefix_filter_and_ignore, include_all, gener
         SizeEtag = namedTupleSizeEtag()
 
         for line in f.readlines():
-            if line_number % 1000 == 0:
+            if line_number % 10000 == 0:
                 print("Reading: {} Line number: {} current file: {}".format(data_file_path, line_number, line.split("\t")[0]))
 
             line = line.strip()

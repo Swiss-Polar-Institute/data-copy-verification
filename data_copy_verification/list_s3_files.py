@@ -11,6 +11,7 @@ import configparser
 # To enable boto logging
 # boto3.set_stream_logger('')
 
+
 def print_configuration_file_example():
     sys.stderr.write(textwrap.dedent("""\
                 It needs to be a json file with this format:
@@ -68,7 +69,7 @@ def create_list_of_files(bucket, output_file_name):
         count += 1
         output_file.write(file.key + "\t" + str(file.size) + "\t" + file.e_tag.replace('"', '') + "\n")
 
-        if count % 1000 == 0:
+        if count % 10000 == 0:
             print("{} {}".format(count, file.key))
 
     output_file.close()
