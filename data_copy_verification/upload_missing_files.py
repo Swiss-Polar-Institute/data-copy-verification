@@ -3,7 +3,6 @@
 import argparse
 import subprocess
 import datetime
-import sys
 import os
 
 
@@ -40,8 +39,6 @@ def upload_files(missing_files_file, s3_bucket):
         exit_code = subprocess.call(cmd)
         write_to_log(cmd, exit_code)
 
-        if count > 5:
-            sys.exit(0)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -51,6 +48,7 @@ def main():
     args = parser.parse_args()
 
     upload_files(args.missing_files_file, args.s3_bucket)
+
 
 if __name__ == "__main__":
     main()

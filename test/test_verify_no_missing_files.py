@@ -195,6 +195,5 @@ class TestVerifyNoMissingFiles(unittest.TestCase):
         self.assertEqual(self._read_file_to_list(output_file.name), [])
 
 
-
 if __name__ == '__main__':
     unittest.main()
