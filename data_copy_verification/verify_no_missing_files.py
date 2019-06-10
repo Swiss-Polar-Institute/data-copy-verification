@@ -109,11 +109,6 @@ def file_exists_name_size(file_name, size, etag, file_dictionary):
     return False
 
 
-def file_exists_ignore_path(file_origin, file_list):
-    file_origin_name = os.path.basename(file_origin.path)
-
-
-
 
 def check_files(source, source_prefix_filter_and_strip,
                 destination, destination_prefix_filter_and_strip,
@@ -132,20 +127,32 @@ def check_files(source, source_prefix_filter_and_strip,
     missing_files_count = 0
 
     for origin_file in origin_files:
-        file_in_destination = origin_file in destination_files
+        if ignore_path:
+            origin_file_without_path = remove_path(origin_file)
 
-        if not file_in_destination:
-            if ignore_file(origin_file.path, origin_file.size):
+        file_in_destination = origin_file in destination_files or (ignore_path and origin_file_without_path in destination_files_name_only)
+
+        if file_in_destination:
+            continue
+
+        if ignore_file(origin_file.path, origin_file.size):
+            continue
+
+        file_name_exists = file_exists_name_size(origin_file.path, origin_file.size,
+                                                 origin_file.etag, all_destination_files_size_etags)
+
+        if file_name_exists:
+            continue
+
+        if ignore_path:
+            file_name_exists = file_exists_name_size(origin_file_without_path.path, origin_file_without_path.size,
+                                                     origin_file_without_path.etag, destination_files_incomplete_tags_name_only)
+
+            if file_name_exists:
                 continue
 
-            file_name_exists = file_exists_name_size(origin_file.path, origin_file.size, origin_file.etag, all_destination_files_size_etags)
-
-            if not file_name_exists and ignore_path:
-                file_name_exists = file_exists_ignore_path(origin_file, all_destination_files_size_etags)
-
-            if not file_name_exists:
-                output_file.write("{}\t{}\t{}\n".format(origin_file.path, origin_file.size, origin_file.etag))
-                missing_files_count += 1
+        output_file.write("{}\t{}\t{}\n".format(origin_file.path, origin_file.size, origin_file.etag))
+        missing_files_count += 1
 
         count += 1
         if count % 10000 == 0:
