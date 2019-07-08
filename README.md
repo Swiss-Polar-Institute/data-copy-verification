@@ -1,4 +1,4 @@
-# data-copy-verificatoin
+# data-copy-verification
 
 This is a set of utilities to verify that files have been copied from:
 
