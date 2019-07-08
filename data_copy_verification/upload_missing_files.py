@@ -64,7 +64,7 @@ def main():
     parser.add_argument("missing_files_file", help="Missing files list (one file per line, can have tabs only first column is used)")
     parser.add_argument("local_base_directory", help="Local base directory - it's prepended on each line of the missing_files_file line, can be empty")
     parser.add_argument("remote_base_directory", help="Remote (S3) base directory where to upload the files")
-    parser.add_argument("s3_bucket", help="s3_bucket to upload")
+    parser.add_argument("s3_bucket", help="Object storage bucket where files should be uploaded to")
 
     args = parser.parse_args()
 
