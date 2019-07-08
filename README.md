@@ -77,7 +77,7 @@ python3 -m unittest tests/test_verify_no_missing_files.py
 ```
 ## Background notes
 
-###File hashes and ETags
+### File hashes and ETags
 
 These tools use hashes, or in the case of object storage-based files, ETags, to compare the files before and after copy to ensure they have not been modified during this process. Within these tools, where hashes are used (i.e for files not on object storage), these are MD5 checksums. ETags are usually MD5 checksums as well, so they can be compared. If a file has been copied without changes or corruption, then the original and copied files will have identical hashes or ETags. However when considering files moved to object storage, there are some circumstances in which this may not be the case. Aside from when the file has been changed or corrupted, these circumstances are described here: 
 
