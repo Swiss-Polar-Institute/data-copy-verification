@@ -2,8 +2,8 @@
 
 This is a set of utilities to verify that files have been copied from:
 
-* local mounted storage (e.g. NAS) to S3
-* from S3 to S3
+* local mounted storage (e.g. NAS) to object storage (such as S3 or minio)
+* from object storage to object storage
 * from mounted storage to mounted storage
 
 It supports:
@@ -12,8 +12,10 @@ It supports:
 * uses Amazon ETag which usually uses MD5 checksums, but also handles verifications by name+size only
 * supports (optionally) files that have been moved
 
+Note that any reference to S3 is made to refer to object storage in general. This could be Amazon S3, or minio, for example.
+
 ## Motivation
-The motivation for the creation of these tools was to verify that millions of files, containing terabytes of data, were uploaded correctly from a NAS to S3.
+The motivation for the creation of these tools was to verify that millions of files, containing terabytes of data, were uploaded correctly from a NAS to object storage.
 
 ## Installation
 ```
@@ -24,7 +26,7 @@ virtualenv -p python3
 pip3 install -r requirements.txt
 ```
 
-## Usage for files copied to S3
+## Usage for files copied to object storage
 * Copy the data (e.g. from `/mnt/data` to `e09e32e2b8944f189aeda41d9a301d3d` using a tool such as CloudBerry, AWS Command Line Interface, etc.)
 * Create the file `$HOME/.list-s3` and add the following text:
 ```
@@ -38,8 +40,8 @@ Execute:
 ```
 cd data_copy_verification/
 ./list_local_files.py /mnt/data localfiles-list.txt # localfiles-list.txt will contain a list of all files in /mnt/data
-./list_s3_files.py e09e32e2b8944f189aeda41d9a301d3d bucket-list.txt # bucket-list.txt will contain a list of all files in S3 bucket
-./verify_no_missing_files.py localfiles-list.txt bucket-list.txt missing-files.txt # missing-files.txt will contain a list of all files that are in /mnt/data but not in the S3 bucket
+./list_s3_files.py e09e32e2b8944f189aeda41d9a301d3d bucket-list.txt # bucket-list.txt will contain a list of all files in object storage bucket
+./verify_no_missing_files.py localfiles-list.txt bucket-list.txt missing-files.txt # missing-files.txt will contain a list of all files that are in /mnt/data but not in the object storage bucket
 ```
 The output will be a file (`missing-files.txt`) with the list of missing files, their sizes and hash/ETags.
 
@@ -77,7 +79,7 @@ python3 -m unittest tests/test_verify_no_missing_files.py
 
 These tools use ETags to compare the files before and after copy to ensure they have not been modified during this process. If the file has been copied without changes or corruption, then the original and copied files will have identical ETags. However there are some circumstances in which this may not be the case. Aside from when the file has been changed or corrupted, these circumstances are described here: 
 
-A "-" occurs at the end of the ETag in the copied file, if this hash is not an MD5 checksum. When using tools to upload files to S3, it is possible to choose when to split a file. There is always a limit to this, but it can be set smaller or larger depending on your preferences. If the file is smaller than this limit, then it will be uploaded to the S3 bucket in one go and therefore the hash/ETag will be the MD5 checksum (with no "-"). However if the file is larger than this limit, then it will be uploaded in parts and the hash/ETag will no longer be the MD5 checksum. Therefore the hash/ETag of the uploaded file will no longer be comparable with that of the original file.
+A "-" occurs at the end of the ETag in the copied file, if this hash is not an MD5 checksum. When using tools to upload files to object storage, it is possible to choose when to split a file. There is always a limit to this, but it can be set smaller or larger depending on your preferences. If the file is smaller than this limit, then it will be uploaded to the object storage bucket in one go and therefore the hash/ETag will be the MD5 checksum (with no "-"). However if the file is larger than this limit, then it will be uploaded in parts and the hash/ETag will no longer be the MD5 checksum. Therefore the hash/ETag of the uploaded file will no longer be comparable with that of the original file.
 
 Another occasion on which the uploaded file's hash/ETag will be different from that of the original file is if the file has SSE-C or SSE-KMS encryption.
 
