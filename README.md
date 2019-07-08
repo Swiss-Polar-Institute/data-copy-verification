@@ -9,8 +9,8 @@ This is a set of utilities to verify that files have been copied from:
 It supports:
 * directory renaming (where the directories can have been renamed on the copy)
 * check a subset of directories
-* uses Amazon ETag which usually uses MD5 checksums, but also handles verifications by name+size only
-* supports (optionally) files that have been moved
+* uses Amazon ETag which usually uses MD5 checksums and file hashes, but also handles verifications by name+size only
+* supports (optionally) files that have been moved between directories
 
 Note that any reference to S3 is made to refer to object storage in general. This could be Amazon S3, or minio, for example.
 
@@ -77,11 +77,12 @@ python3 -m unittest tests/test_verify_no_missing_files.py
 ```
 ## Background notes
 
-These tools use ETags to compare the files before and after copy to ensure they have not been modified during this process. If the file has been copied without changes or corruption, then the original and copied files will have identical ETags. However there are some circumstances in which this may not be the case. Aside from when the file has been changed or corrupted, these circumstances are described here: 
+###File hashes and ETags
 
-A "-" occurs at the end of the ETag in the copied file, if this hash is not an MD5 checksum. When using tools to upload files to object storage, it is possible to choose when to split a file. There is always a limit to this, but it can be set smaller or larger depending on your preferences. If the file is smaller than this limit, then it will be uploaded to the object storage bucket in one go and therefore the hash/ETag will be the MD5 checksum (with no "-"). However if the file is larger than this limit, then it will be uploaded in parts and the hash/ETag will no longer be the MD5 checksum. Therefore the hash/ETag of the uploaded file will no longer be comparable with that of the original file.
+These tools use hashes, or in the case of object storage-based files, ETags, to compare the files before and after copy to ensure they have not been modified during this process. Within these tools, where hashes are used (i.e for files not on object storage), these are MD5 checksums. ETags are usually MD5 checksums as well, so they can be compared. If a file has been copied without changes or corruption, then the original and copied files will have identical hashes or ETags. However when considering files moved to object storage, there are some circumstances in which this may not be the case. Aside from when the file has been changed or corrupted, these circumstances are described here: 
 
-Another occasion on which the uploaded file's hash/ETag will be different from that of the original file is if the file has SSE-C or SSE-KMS encryption.
+1. *A "-" occurs towards the end of the ETag in the copied file, if this hash is not an MD5 checksum.* When using tools to upload files to object storage, it is possible to choose when to split a file. There is always a limit to this, but it can be set smaller or larger depending on your preferences. If the file is smaller than this limit, then it will be uploaded to the object storage bucket in one go and therefore the ETag will be the MD5 checksum (with no "-"). However if the file is larger than this limit, then it will be uploaded in parts and the ETag will no longer be the MD5 checksum. Therefore the ETag of the uploaded file will no longer be comparable with that of the original file.
 
-ETags are used because in the majority of the files when we prepared these utilities the ETags were MD5 and we wanted to detect changes of the files between the current local storage and the uploaded S3.
+1. *Files that have SSE-C or SSE-KMS encryption.* Another occasion on which a file uploaded to object storage has an ETag that will not be an MD5 checksum is if the file has SSE-C or SSE-KMS encryption.
 
+When using these tools, the main issue that could cause problems here is the copying of large files and the resulting ETag fitting the circumstances of point one above. This problem is overcome within the tools by comparing the files by path+size, where the ETag contains a "-".
