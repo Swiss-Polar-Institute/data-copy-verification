@@ -178,13 +178,12 @@ def check_files(source, source_prefix_filter_and_strip,
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("source", help="Source files: will check that all these files are in file2")
-    parser.add_argument("destination", help="Destination files: will check that contains all the source files")
+    parser.add_argument("source", help="Source files: will check that all these files are in destination files")
+    parser.add_argument("destination", help="Destination files: will check that this location contains all the source files")
     parser.add_argument("output", help="Output file with the results")
     parser.add_argument("--source-prefix-filter-and-strip", help="Will read only source files starting with the given prefix AND will remove the prefix in the generated list")
     parser.add_argument("--destination-prefix-filter-and-strip", help="Will read only destination files starting with the given prefix AND will remove the prefix in the generated list")
-
-    parser.add_argument("--ignore-paths", action="store_true", help="Will ignore paths. Will assume that a file exists if the name+size or name+size+md5 (if possible) is the same even if in a different directory")
+    parser.add_argument("--ignore-paths", action="store_true", help="Will ignore paths. Will assume that a file exists if the name+size or name+size+MD5 (if possible) is the same even if in a different directory")
 
     args = parser.parse_args()
 
