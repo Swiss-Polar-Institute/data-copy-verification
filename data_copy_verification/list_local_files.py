@@ -56,9 +56,9 @@ def calculate_hashes(directory, output_file):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.description("From a local system it generates a file with list of files, sizes and md5. md5 because this is what Amazon S3 uses as ETag (unless the file was uploaded in chunks)")
-    parser.add_argument("base_directory", help="root directory of the list of files")
-    parser.add_argument("output_file", help="Output file: each line contains the name of the file, file size (bytes) and md5 hash")
+    parser.description("From a local system, this script generates a file with list of file names, sizes (bytes) and MD5 checksums. MD5 is used because this is what Amazon S3 uses as an ETag (unless the file was uploaded in chunks) - see README.md for more information.")
+    parser.add_argument("base_directory", help="Root directory of the list of files")
+    parser.add_argument("output_file", help="Output file: each line contains the name of the file, file size (bytes) and MD5 hash")
 
     args = parser.parse_args()
 
