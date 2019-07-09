@@ -177,13 +177,13 @@ def check_files(source, source_prefix_filter_and_strip,
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("source", help="Source files: will check that all these files are in destination files")
-    parser.add_argument("destination", help="Destination files: will check that this location contains all the source files")
-    parser.add_argument("output", help="Output file with the results")
-    parser.add_argument("--source-prefix-filter-and-strip", help="Will read only source files starting with the given prefix AND will remove the prefix in the generated list")
-    parser.add_argument("--destination-prefix-filter-and-strip", help="Will read only destination files starting with the given prefix AND will remove the prefix in the generated list")
-    parser.add_argument("--ignore-paths", action="store_true", help="Will ignore paths. Will assume that a file exists if the name+size or name+size+MD5 (if possible) is the same even if in a different directory")
+    parser = argparse.ArgumentParser(description="Writes to OUTPUT the files in the SOURCE file list but not in the DESTINATION file list")
+    parser.add_argument("source", help="Source file: containing a list of original files")
+    parser.add_argument("destination", help="Destination file: containing a list of destination files")
+    parser.add_argument("output", help="Output file with the missing files in [DESTINATION] from [SOURCE]")
+    parser.add_argument("--source-prefix-filter-and-strip", help="Will read only source files starting with the given prefix AND will ignore the prefix part of the path")
+    parser.add_argument("--destination-prefix-filter-and-strip", help="Will read only destination files starting with the given prefix AND will ignore the prefix part of the path")
+    parser.add_argument("--ignore-paths", action="store_true", help="Will ignore paths. Will assume that a file exists if the name+size or name+size+MD5 (if full MD5 not ETag with -) is the same even if they are in a different directory")
 
     args = parser.parse_args()
 

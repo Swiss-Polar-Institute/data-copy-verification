@@ -76,8 +76,8 @@ def create_list_of_files(bucket, output_file_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Lists all the files in a bucket and saves it with its ETag (usually an MD5 checksum) into destination_file")
-    parser.add_argument("bucket", help="Bucket name of where the files should be listed")
+    parser = argparse.ArgumentParser(description="Lists all the files in the BUCKET and saves it with its ETag (usually an MD5 checksum) into DESTINATION_FILE")
+    parser.add_argument("bucket", help="Bucket of where the files should be listed")
     parser.add_argument("destination_file", help="Destination file: where to save the list of files")
 
     args = parser.parse_args()

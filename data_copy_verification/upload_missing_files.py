@@ -60,11 +60,11 @@ def upload_files(missing_files_file, local_base_directory, remote_base_directory
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Tool aimed to upload files from MISSING_FILES_FILE stored in LOCAL_BASE_DIRECTORY to S3_BUCKET in REMOTE_BASE_DIRECTORY")
     parser.add_argument("missing_files_file", help="Missing files list (one file per line, can have tabs only first column is used)")
     parser.add_argument("local_base_directory", help="Local base directory - it's prepended on each line of the missing_files_file line, can be empty")
-    parser.add_argument("remote_base_directory", help="Remote (S3) base directory where to upload the files")
     parser.add_argument("s3_bucket", help="Object storage bucket where files should be uploaded to")
+    parser.add_argument("remote_base_directory", help="Remote (S3) base directory where to upload the files")
 
     args = parser.parse_args()
 
