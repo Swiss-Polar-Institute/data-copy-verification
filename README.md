@@ -76,12 +76,12 @@ If the number of missing files in `missing-files.txt` without the `--ignore-path
 To execute all unit tests:
 
 ```
-python3 -m unittest discover
+python3 -m unittest
 ```
 
 Or only one unit test class:
 ```
-python3 -m unittest tests/test_verify_no_missing_files.py
+python3 -m unittest test/test_verify_no_missing_files.py
 ```
 ## Background notes
 
