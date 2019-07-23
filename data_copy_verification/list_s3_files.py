@@ -36,9 +36,7 @@ def read_configuration(section, key):
     config.read(configuration_path)
 
     if section not in config or key not in config[section]:
-        sys.stderr.write("Cannot read: {}/{}\n".format(section, key))
-        print_configuration_file_example()
-        sys.exit(1)
+        raise LookupError("Cannot read {}/{} from {}".format(section, key, configuration_path))
 
     return config[section][key]
 
