@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-import boto3
-import os
-import io
 import argparse
+import configparser
+import io
+import os
 import sys
 import textwrap
-import configparser
+
+import boto3
+
 
 # To enable boto logging
 # boto3.set_stream_logger('')
@@ -23,8 +25,13 @@ def print_configuration_file_example():
                 """))
 
 
-def read_configuration(section, key):
-    configuration_path = os.path.join(os.getenv("HOME"), ".list-s3")
+def default_configuration_file():
+    return os.path.join(os.getenv("HOME"), ".list-s3")
+
+
+def read_configuration(section, key, configuration_path=None):
+    if configuration_path is None:
+        configuration_path = default_configuration_file()
 
     if not os.path.isfile(configuration_path):
         sys.stderr.write("File {} doesn't exist".format(configuration_path))
@@ -41,14 +48,14 @@ def read_configuration(section, key):
     return config[section][key]
 
 
-def create_list_of_files(bucket, output_file_name):
+def create_list_of_files(bucket, output_file_name, configuration_file):
     if os.path.isfile(output_file_name):
         sys.stderr.write("File {} already exists, aborting".format(output_file_name))
         sys.exit(1)
 
-    aws_access_key_id = read_configuration("authentication", "aws-access-key-id")
-    aws_secret_access_key = read_configuration("authentication", "aws-secret-access-key")
-    aws_endpoint_url = read_configuration("authentication", "endpoint-url")
+    aws_access_key_id = read_configuration("authentication", "aws-access-key-id", configuration_file)
+    aws_secret_access_key = read_configuration("authentication", "aws-secret-access-key", configuration_file)
+    aws_endpoint_url = read_configuration("authentication", "endpoint-url", configuration_file)
 
     s3 = boto3.resource(service_name="s3",
                         aws_access_key_id=aws_access_key_id,
@@ -74,10 +81,12 @@ def create_list_of_files(bucket, output_file_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Lists all the files in the BUCKET and saves it with its ETag (usually an MD5 checksum) into DESTINATION_FILE")
+    parser = argparse.ArgumentParser(
+        description="Lists all the files in the BUCKET and saves it with its ETag (usually an MD5 checksum) into DESTINATION_FILE")
     parser.add_argument("bucket", help="Bucket of where the files should be listed")
     parser.add_argument("destination_file", help="Destination file: where to save the list of files")
+    parser.add_argument("--configuration", help=f"Configuration file. Defaults to {default_configuration_file()}")
 
     args = parser.parse_args()
 
-    create_list_of_files(args.bucket, args.destination_file)
+    create_list_of_files(args.bucket, args.destination_file, args.configuration)
