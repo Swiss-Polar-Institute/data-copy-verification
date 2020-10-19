@@ -20,7 +20,7 @@ The motivation for the creation of these tools was to verify that millions of fi
 ```
 git clone https://github.com/Swiss-Polar-Institute/data-copy-verification.git
 cd data-copy-verification
-virtualenv -p python3
+virtualenv -p python3 venv
 . venv/bin/activate
 pip3 install -r requirements.txt
 ```
