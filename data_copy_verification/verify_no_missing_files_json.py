@@ -63,7 +63,7 @@ def load_files(file_path):
     return file_dictionary
 
 
-def check_files(source_file, destination_file, output_file, enable_fuzzy):
+def check_files(source_file, destination_file, output_file):
     source_files = load_files(source_file)
     destination_files = load_files(destination_file)
 
@@ -92,7 +92,7 @@ def main():
     args = parser.parse_args()
 
     check_files(args.source, args.destination,
-                args.output, args.enable_fuzzy)
+                args.output)
 
 
 if __name__ == "__main__":
