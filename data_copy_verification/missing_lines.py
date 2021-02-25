@@ -44,7 +44,9 @@ def diff_lines(origin_path, destination_path):
     extra_lines_destination = destination_set - origin_set
 
     return {'missing_lines_destination': missing_lines_destination,
-            'extra_lines_destination': extra_lines_destination
+            'extra_lines_destination': extra_lines_destination,
+            'lines_origin': len(origin_set),
+            'lines_destination': len(destination_set),
             }
 
 
@@ -53,6 +55,9 @@ def main(origin_path, destination_path):
 
     missing_lines_destination = result['missing_lines_destination']
     extra_lines_destination = result['extra_lines_destination']
+
+    print(f'* Number of lines in origin     : {origin_path}: {result["lines_origin"]}')
+    print(f'* Number of lines in destination: {destination_path}: {result["lines_destination"]}')
 
     print(f'* Missing lines in {destination_path}:')
     print_lines(missing_lines_destination)
