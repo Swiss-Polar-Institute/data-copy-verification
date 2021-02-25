@@ -15,7 +15,7 @@ def now():
 
 def rclone_hashsum(config, remote, output_directory, log_file=None):
     # remote_slug = remote.replace(':', '_').replace('/', '_')
-    output_file = f'{output_directory}/{remote}-{now()}.txt'
+    output_file = f'{output_directory}/{remote}-list-{now()}.txt'
 
     to_exec = ['rclone',
                '--config', config,
@@ -40,7 +40,7 @@ def rclone_hashsum(config, remote, output_directory, log_file=None):
 
 
 def write_result(output_directory, remote, missing_lines_info):
-    output_file_path = f'{output_directory}/{remote}-{now()}.txt'
+    output_file_path = f'{output_directory}/{remote}-result-{now()}.txt'
 
     with open(output_file_path, 'w') as output_file:
         output_file.write(f'REMOTE: {remote}\n')
