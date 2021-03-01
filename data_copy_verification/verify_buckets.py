@@ -13,9 +13,13 @@ def now():
     return f'{datetime.datetime.now():%Y%m%d-%H%M}'
 
 
+def slugify_file_name(file_name):
+    return file_name.replace(':', '_').replace('/', '_')
+
+
 def rclone_hashsum(config, remote, output_directory, log_file=None):
-    # remote_slug = remote.replace(':', '_').replace('/', '_')
-    output_file = f'{output_directory}/{remote}-list-{now()}.txt'
+    remote_slug = slugify_file_name(remote)
+    output_file = f'{output_directory}/{remote_slug}-list-{now()}.txt'
 
     to_exec = ['rclone',
                '--config', config,
@@ -40,7 +44,8 @@ def rclone_hashsum(config, remote, output_directory, log_file=None):
 
 
 def write_result(output_directory, remote, missing_lines_info):
-    output_file_path = f'{output_directory}/{remote}-result-{now()}.txt'
+    remote_slugified = slugify_file_name(remote)
+    output_file_path = f'{output_directory}/{remote_slugified}-result-{now()}.txt'
 
     with open(output_file_path, 'w') as output_file:
         output_file.write(f'REMOTE: {remote}\n')
@@ -58,11 +63,14 @@ def main(config_path, output_directory, rclone_log_file):
 
         return_value = 0
         for bucket_config in data:
-            print(f'Will start: {bucket_config["config_section"]}')
+            print(f'* {bucket_config["config_section"]}')
             remote = f'{bucket_config["config_section"]}:{bucket_config["bucket_name"]}/{bucket_config["path"]}'
             remote = remote.rstrip('/')
             hashsum_file = rclone_hashsum(bucket_config['rclone_config_file'], remote, output_directory,
                                           rclone_log_file)
+
+            print(f'Model file: {bucket_config["model_file"]}')
+            print(f'Listing: {hashsum_file}')
 
             missing_lines_info = missing_lines.diff_lines(bucket_config['model_file'], hashsum_file)
 
