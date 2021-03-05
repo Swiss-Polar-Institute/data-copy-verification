@@ -36,44 +36,44 @@ def print_lines(lines):
         print(f'{line[0]}  {line[1]}')
 
 
-def diff_lines(origin_path, destination_path):
-    origin_set = read(origin_path)
-    destination_set = read(destination_path)
+def diff_lines(bucket_list_path, model_list_path):
+    bucket_set = read(bucket_list_path)
+    model_set = read(model_list_path)
 
-    missing_lines_destination = origin_set - destination_set
-    extra_lines_destination = destination_set - origin_set
+    missing_files_in_bucket = model_set - bucket_set
+    extra_files_in_bucket = bucket_set - model_set
 
-    return {'missing_lines_destination': missing_lines_destination,
-            'extra_lines_destination': extra_lines_destination,
-            'lines_origin': len(origin_set),
-            'lines_destination': len(destination_set),
+    return {'missing_files_in_bucket': missing_files_in_bucket,
+            'extra_files_in_bucket': extra_files_in_bucket,
+            'files_in_bucket': len(bucket_set),
+            'files_in_destination': len(model_set),
             }
 
 
-def main(origin_path, destination_path):
-    result = diff_lines(origin_path, destination_path)
+def main(bucket_path, model_path):
+    result = diff_lines(bucket_path, model_path)
 
-    missing_lines_destination = result['missing_lines_destination']
-    extra_lines_destination = result['extra_lines_destination']
+    missing_files_in_bucket = result['missing_files_in_bucket']
+    extra_files_in_bucket = result['extra_files_in_bucket']
 
-    print(f'* Number of lines in origin     : {origin_path}: {result["lines_origin"]}')
-    print(f'* Number of lines in destination: {destination_path}: {result["lines_destination"]}')
+    print(f'* Number of files in bucket ({bucket_path}): {result["files_in_bucket"]}')
+    print(f'* Number of files in model  ({model_path}): {result["files_in_destination"]}')
 
-    print(f'* Missing lines in {destination_path}:')
-    print_lines(missing_lines_destination)
-    print(f'Total: {len(missing_lines_destination)}')
+    print(f'* Missing files in {bucket_path}:')
+    print_lines(missing_files_in_bucket)
+    print(f'Total: {len(missing_files_in_bucket)}')
 
     print()
-    print(f'* Extra lines in {destination_path}:')
-    print_lines(extra_lines_destination)
-    print(f'Total: {len(extra_lines_destination)}')
+    print(f'* Extra files in {bucket_path}:')
+    print_lines(extra_files_in_bucket)
+    print(f'Total: {len(extra_files_in_bucket)}')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Tool to list lines that are missing/extra between two files removing duplicates and sorting them')
-    parser.add_argument('origin')
-    parser.add_argument('destination')
+    parser.add_argument('bucket')
+    parser.add_argument('model')
 
     args = parser.parse_args()
-    main(args.origin, args.destination)
+    main(args.bucket, args.model)

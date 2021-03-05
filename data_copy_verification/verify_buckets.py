@@ -17,7 +17,7 @@ def slugify_file_name(file_name):
     return file_name.replace(':', '_').replace('/', '_')
 
 
-def rclone_hashsum(config, remote, output_directory, log_file=None):
+def rclone_hashsum(config, remote, output_directory, rclone_download, log_file=None):
     remote_slug = slugify_file_name(remote)
     output_file = f'{output_directory}/{remote_slug}-list-{now()}.txt'
 
@@ -25,12 +25,14 @@ def rclone_hashsum(config, remote, output_directory, log_file=None):
                '--config', config,
                'hashsum', 'MD5',
                remote,
-               '--download',
                f'--output-file={output_file}',
                '--transfers=8']
 
     if log_file:
         to_exec += ['-vv', f'--log-file={log_file}']
+
+    if rclone_download:
+        to_exec += ['--download']
 
     to_exec_str = ' '.join(to_exec)
     print('Will execute:', to_exec_str)
@@ -43,44 +45,48 @@ def rclone_hashsum(config, remote, output_directory, log_file=None):
     return output_file
 
 
-def write_result(output_directory, remote, missing_lines_info):
+def write_result(output_directory, remote, missing_files_info):
     remote_slugified = slugify_file_name(remote)
     output_file_path = f'{output_directory}/{remote_slugified}-result-{now()}.txt'
 
     with open(output_file_path, 'w') as output_file:
         output_file.write(f'REMOTE: {remote}\n')
         output_file.write('Missing files in bucket:\n')
-        output_file.writelines(missing_lines_info['missing_lines_destination'])
+        output_file.writelines(missing_files_info['missing_files_in_bucket'])
 
         output_file.write('\n')
         output_file.write('Extra lines in bucket:\n')
-        output_file.writelines(missing_lines_info['extra_lines_destination'])
+        output_file.writelines(missing_files_info['extra_files_in_bucket'])
 
 
 def main(config_path, output_directory, rclone_log_file):
     with open(config_path) as json_file:
-        data = json.load(json_file)
+        buckets_config = json.load(json_file)
 
         return_value = 0
-        for bucket_config in data:
+        for bucket_config in buckets_config:
             print(f'* {bucket_config["config_section"]}')
             remote = f'{bucket_config["config_section"]}:{bucket_config["bucket_name"]}/{bucket_config["path"]}'
             remote = remote.rstrip('/')
-            hashsum_file = rclone_hashsum(bucket_config['rclone_config_file'], remote, output_directory,
-                                          rclone_log_file)
+            bucket_listing_file = rclone_hashsum(bucket_config['rclone_config_file'], remote, output_directory,
+                                                 bucket_config['rclone_download'], rclone_log_file)
 
-            print(f'Model file: {bucket_config["model_file"]}')
-            print(f'Listing: {hashsum_file}')
+            print(f'Bucket file: {bucket_listing_file}')
+            print(f'Model file : {bucket_config["model_listing_file"]}')
 
-            missing_lines_info = missing_lines.diff_lines(bucket_config['model_file'], hashsum_file)
+            missing_files = missing_lines.diff_lines(bucket_config['model_listing_file'], bucket_listing_file)
 
-            print('Missing objects in bucket:', len(missing_lines_info['missing_lines_destination']))
-            print('Extra lines in bucket', len(missing_lines_info['extra_lines_destination']))
+            print('Missing objects in bucket:', len(missing_files['missing_files_in_bucket']))
 
-            if missing_lines_info['missing_lines_destination'] or missing_lines_info['extra_lines_destination']:
+            extra_files_in_bucket = 0
+            if bucket_config['ignore_extra_files_bucket'] is False:
+                extra_files_in_bucket = len(missing_files['extra_files_in_bucket'])
+                print('Extra files in bucket', extra_files_in_bucket)
+
+            if missing_files['missing_files_in_bucket'] or extra_files_in_bucket:
                 return_value = 1
 
-            write_result(output_directory, remote, missing_lines_info)
+            write_result(output_directory, remote, missing_files)
 
     sys.exit(return_value)
 
